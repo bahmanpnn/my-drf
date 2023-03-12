@@ -6,6 +6,7 @@ from .serializers import ArticleSerializer, UserSerializer
 from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.permissions import IsAdminUser
 from .permissions import IsStaffOrReadOnly, IsAuthor, IsSuperUserOrStaffReadOnly
+from rest_framework.authentication import BasicAuthentication
 
 
 class ArticleListApiView(ListAPIView):
@@ -32,6 +33,7 @@ class UserListApiView(ListCreateAPIView):
     serializer_class = UserSerializer
     permission_classes = [IsSuperUserOrStaffReadOnly]
     # permission_classes = (IsSuperUserOrStaffReadOnly,)
+    # authentication_classes = (BasicAuthentication,)
 
 
 class UserDetailView(RetrieveUpdateDestroyAPIView):
