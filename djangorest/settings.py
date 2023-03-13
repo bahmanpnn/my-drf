@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     # added apps
     'rest_framework',
+    'rest_framework.authtoken',
+
     'blog.apps.BlogConfig',  # 'blog' app
     'api.apps.ApiConfig',  # 'api' app
 ]
@@ -128,9 +130,9 @@ REST_FRAMEWORK = {
         'api.permissions.IsStaffOrReadOnly',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.BasicAuthentication',
         # 'rest_framework.authentication.SessionAuthentication',
-        #     'TokenAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
         #     'knox',
         #     'jwt',
         #     'oauth',

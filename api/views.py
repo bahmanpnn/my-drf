@@ -29,7 +29,12 @@ class ArticleDetailView(RetrieveUpdateDestroyAPIView):
 
 # user
 class UserListApiView(ListCreateAPIView):
-    queryset = User.objects.all()
+    # queryset = User.objects.all()
+    def get_queryset(self):
+        print(self.request.user)
+        print(self.request.auth)
+        return User.objects.all()
+
     serializer_class = UserSerializer
     permission_classes = [IsSuperUserOrStaffReadOnly]
     # permission_classes = (IsSuperUserOrStaffReadOnly,)
