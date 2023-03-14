@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.authtoken.views import obtain_auth_token
+from api.views import RevokeToken
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -11,4 +12,5 @@ urlpatterns = [
     # remember that api-auth url was session login method
     path('rest-api/api-token-auth/', obtain_auth_token),
     #     this url is post token for user
+    path('rest-api/revoke/', RevokeToken.as_view(), name='revoke-token'),
 ]
