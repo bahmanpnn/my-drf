@@ -50,9 +50,9 @@ class UserDetailView(RetrieveUpdateDestroyAPIView):
     # permission_classes = [IsAdminUser]
 
 
-class RevokeToken(APIView):
-    permission_classes = (IsAuthenticated,)
-
-    def delete(self, request):
-        request.auth.delete()
-        return Response({"msg": "delete"},status=204)
+# class RevokeToken(APIView):
+#     permission_classes = (IsAuthenticated,)
+#
+#     def delete(self, request):
+#         request.auth.delete()
+#         return Response({"msg": "delete"},status=204)

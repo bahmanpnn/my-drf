@@ -35,13 +35,28 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
     # added apps
     'rest_framework',
     'rest_framework.authtoken',
 
+
+    # dj_rest_auth third party package
+    'dj_rest_auth',
+
+    # optionals for dj_rest_auth third party package
+    'django.contrib.sites',  # this is for handling many domains in one app
+    'dj_rest_auth.registration',
+
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+
+    # main apps
     'blog.apps.BlogConfig',  # 'blog' app
     'api.apps.ApiConfig',  # 'api' app
 ]
+SITE_ID = 1
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
