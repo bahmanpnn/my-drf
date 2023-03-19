@@ -35,29 +35,24 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    # added
+    'django.contrib.sites',  # this is for handling many domains in one app
     # added apps
     'rest_framework',
     'rest_framework.authtoken',
 
     # optionals for dj_rest_auth third party package
-    # 'django.contrib.sites',  # this is for handling many domains in one app
-
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
     # dj_rest_auth is third party package
-    # 'dj_rest_auth',
-    # 'dj_rest_auth.registration',
-    #
-    # 'allauth',
-    # 'allauth.account',
-    # 'allauth.socialaccount',
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
 
     # main apps
     'blog.apps.BlogConfig',  # 'blog' app
     'api.apps.ApiConfig',  # 'api' app
 ]
-
-# I think it is for part of sites in admin panel that set by default example.com!!
-SITE_ID = 1
 
 # set console email backend that you can see email that send to user in console
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -150,7 +145,8 @@ REST_FRAMEWORK = {
         'api.permissions.IsStaffOrReadOnly',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
+        # 'rest_framework_simplejwt.authentication.JWTAuthentication',
         # 'rest_framework.authentication.BasicAuthentication',
         # 'rest_framework.authentication.SessionAuthentication',
         # 'rest_framework.authentication.TokenAuthentication',
@@ -158,3 +154,12 @@ REST_FRAMEWORK = {
         #     'oauth',
     ]
 }
+
+# they are for dj-auth using
+# USE_JWT=True
+REST_USE_JWT = True
+JWT_AUTH_COOKIE = 'access'
+JWT_AUTH_REFRESH_COOKIE = 'refresh'
+
+# I think it is for part of sites in admin panel that set by default example.com!!
+SITE_ID = 1
