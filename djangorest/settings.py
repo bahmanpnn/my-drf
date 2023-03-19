@@ -40,24 +40,29 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
 
-
-    # dj_rest_auth third party package
-    'dj_rest_auth',
-
     # optionals for dj_rest_auth third party package
-    'django.contrib.sites',  # this is for handling many domains in one app
-    'dj_rest_auth.registration',
+    # 'django.contrib.sites',  # this is for handling many domains in one app
 
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
+    # dj_rest_auth is third party package
+    # 'dj_rest_auth',
+    # 'dj_rest_auth.registration',
+    #
+    # 'allauth',
+    # 'allauth.account',
+    # 'allauth.socialaccount',
 
     # main apps
     'blog.apps.BlogConfig',  # 'blog' app
     'api.apps.ApiConfig',  # 'api' app
 ]
+
+# I think it is for part of sites in admin panel that set by default example.com!!
 SITE_ID = 1
 
+# set console email backend that you can see email that send to user in console
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# another part of project
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -145,11 +150,11 @@ REST_FRAMEWORK = {
         'api.permissions.IsStaffOrReadOnly',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
         # 'rest_framework.authentication.BasicAuthentication',
         # 'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
+        # 'rest_framework.authentication.TokenAuthentication',
         #     'knox',
-        #     'jwt',
         #     'oauth',
     ]
 }
