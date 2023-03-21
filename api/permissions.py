@@ -30,20 +30,34 @@ class IsAuthor(BasePermission):
             return True
         # all access to is_super or author of that object
         return bool(
+            request.user.is_authenticated and
             request.user.is_superuser or
             obj.author == request.user
         )
 
 
+# this is from source code not mine
 class IsSuperUserOrStaffReadOnly(BasePermission):
-    # remember that it is has_permission but it work on detailuser api!! so we can use has_permission for detail pages!
     def has_permission(self, request, view):
-        # access safe methods for user that is authenticated and is_staff
-        if request.method in SAFE_METHODS and \
-                request.user.is_authenticated and \
-                request.user.is_staff:
-            return True
-        # access all method to is_super
         return bool(
+            # get access to authors readonly
+            request.method in SAFE_METHODS and
+            request.user and
+            request.user.is_staff or
+            # get access to superuser full
+            request.user and
             request.user.is_superuser
         )
+
+# class IsSuperUserOrStaffReadOnly(BasePermission):
+#     # remember that it is has_permission but it work on detailuser api!! so we can use has_permission for detail pages!
+#     def has_permission(self, request, view):
+#         # access safe methods for user that is authenticated and is_staff
+#         if request.method in SAFE_METHODS and \
+#                 request.user.is_authenticated and \
+#                 request.user.is_staff:
+#             return True
+#         # access all method to is_super
+#         return bool(
+#             request.user.is_superuser
+#         )

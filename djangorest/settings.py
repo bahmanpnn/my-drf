@@ -54,9 +54,6 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',  # 'api' app
 ]
 
-# set console email backend that you can see email that send to user in console
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
 # another part of project
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -151,7 +148,6 @@ REST_FRAMEWORK = {
         # 'rest_framework.authentication.SessionAuthentication',
         # 'rest_framework.authentication.TokenAuthentication',
         #     'knox',
-        #     'oauth',
     ]
 }
 
@@ -163,3 +159,6 @@ JWT_AUTH_REFRESH_COOKIE = 'refresh'
 
 # I think it is for part of sites in admin panel that set by default example.com!!
 SITE_ID = 1
+
+# set console email backend that you can see email that send to user in console
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

@@ -1,15 +1,17 @@
 # from django.shortcuts import render
-from django.contrib.auth.models import User
-from rest_framework.response import Response
-from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework.views import APIView
+# from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework.viewsets import ModelViewSet
-
 from blog.models import Article
 from .serializers import ArticleSerializer, UserSerializer
-from rest_framework.generics import ListAPIView, ListCreateAPIView, RetrieveUpdateDestroyAPIView
-from rest_framework.permissions import IsAdminUser, IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.generics import ListCreateAPIView
+from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from .permissions import IsStaffOrReadOnly, IsAuthor, IsSuperUserOrStaffReadOnly
-from rest_framework.authentication import BasicAuthentication
+
+
+# from rest_framework.authentication import BasicAuthentication
 
 
 # class ArticleListApiView(ListAPIView):
@@ -37,7 +39,22 @@ class ArticleViewSet(ModelViewSet):
             permission_classes = [IsStaffOrReadOnly, IsAuthor]
         else:
             permission_classes = [IsAuthenticatedOrReadOnly, IsStaffOrReadOnly]
+            # permission_classes = [IsStaffOrReadOnly]
         return [permission() for permission in permission_classes]
+
+    def get_queryset(self):
+        queryset = Article.objects.all()
+
+        is_active = self.request.query_params.get('is_active')
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active)
+
+        author = self.request.query_params.get('author')
+        if author is not None:
+            queryset = queryset.filter(author__username=author)  # author_name
+            # queryset = queryset.filter(author=author)  #author_id
+
+        return queryset
 
 
 class ArticleListCreateApiView(ListCreateAPIView):
@@ -67,7 +84,7 @@ class ArticleListCreateApiView(ListCreateAPIView):
 
 
 class UserViewSet(ModelViewSet):
-    queryset = User.objects.all()
+    queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     permission_classes = (IsSuperUserOrStaffReadOnly,)
 
