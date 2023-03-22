@@ -33,6 +33,19 @@ from .permissions import IsStaffOrReadOnly, IsAuthor, IsSuperUserOrStaffReadOnly
 class ArticleViewSet(ModelViewSet):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
+    filterset_fields = ['is_active', 'author__username', 'author__first_name', 'author__last_name']
+    search_fields = ['title', 'content', 'author__username', 'author__first_name', 'author__last_name']
+    ordering_fields = ['publish_date', 'is_active']
+
+    ordering=['-publish_date']
+    # diffrence of ordering and ordering_fields is user can choose fields that want to order by that,
+    # but ordering is set by default and user can't change that
+
+    # this url is from search about is_active true and username of author is bahman!!
+    # http://127.0.0.1:8000/rest-api/articles/?is_active=True&author__username=bahman
+
+    # this url is for searching just by username that is mamad
+    # http://127.0.0.1:8000/rest-api/articles/?is_active=true&author__username=mamad&author__first_name=&author__last_name=
 
     def get_permissions(self):
         if self.action in ['retrieve', 'update', 'destroy']:
@@ -42,19 +55,19 @@ class ArticleViewSet(ModelViewSet):
             # permission_classes = [IsStaffOrReadOnly]
         return [permission() for permission in permission_classes]
 
-    def get_queryset(self):
-        queryset = Article.objects.all()
-
-        is_active = self.request.query_params.get('is_active')
-        if is_active is not None:
-            queryset = queryset.filter(is_active=is_active)
-
-        author = self.request.query_params.get('author')
-        if author is not None:
-            queryset = queryset.filter(author__username=author)  # author_name
-            # queryset = queryset.filter(author=author)  #author_id
-
-        return queryset
+    # def get_queryset(self):
+    #     queryset = Article.objects.all()
+    #
+    #     is_active = self.request.query_params.get('is_active')
+    #     if is_active is not None:
+    #         queryset = queryset.filter(is_active=is_active)
+    #
+    #     author = self.request.query_params.get('author')
+    #     if author is not None:
+    #         queryset = queryset.filter(author__username=author)  # author_name
+    #         # queryset = queryset.filter(author=author)  #author_id
+    #
+    #     return queryset
 
 
 class ArticleListCreateApiView(ListCreateAPIView):

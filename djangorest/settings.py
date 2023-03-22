@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     # dj_rest_auth is third party package
     'dj_rest_auth',
     'dj_rest_auth.registration',
+    'django_filters',
 
     # main apps
     'blog.apps.BlogConfig',  # 'blog' app
@@ -148,6 +149,11 @@ REST_FRAMEWORK = {
         # 'rest_framework.authentication.SessionAuthentication',
         # 'rest_framework.authentication.TokenAuthentication',
         #     'knox',
+    ],
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
     ]
 }
 
