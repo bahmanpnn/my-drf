@@ -5,8 +5,8 @@
 from django.contrib.auth import get_user_model
 from rest_framework.viewsets import ModelViewSet
 from blog.models import Article
-from .serializers import ArticleSerializer, UserSerializer
-from rest_framework.generics import ListCreateAPIView
+from .serializers import ArticleSerializer, UserSerializer, ArticleAuthorSerializer
+from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from .permissions import IsStaffOrReadOnly, IsAuthor, IsSuperUserOrStaffReadOnly
 
@@ -37,7 +37,8 @@ class ArticleViewSet(ModelViewSet):
     search_fields = ['title', 'content', 'author__username', 'author__first_name', 'author__last_name']
     ordering_fields = ['publish_date', 'is_active']
 
-    ordering=['-publish_date']
+    ordering = ['-publish_date']
+
     # diffrence of ordering and ordering_fields is user can choose fields that want to order by that,
     # but ordering is set by default and user can't change that
 
@@ -74,6 +75,7 @@ class ArticleListCreateApiView(ListCreateAPIView):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
 
+
 # user
 # class UserListApiView(ListCreateAPIView):
 #     # queryset = User.objects.all()
@@ -98,7 +100,13 @@ class ArticleListCreateApiView(ListCreateAPIView):
 class UserViewSet(ModelViewSet):
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
-    permission_classes = (IsSuperUserOrStaffReadOnly,)
+    # permission_classes = (IsSuperUserOrStaffReadOnly,)
+
+
+class ArticleAuthorRelation(RetrieveAPIView):
+    queryset = get_user_model().objects.all()
+    # queryset = get_user_model().objects.filter(is_staff=True)
+    serializer_class = ArticleAuthorSerializer
 
 # class RevokeToken(APIView):
 #     permission_classes = (IsAuthenticated,)

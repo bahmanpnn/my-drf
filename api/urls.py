@@ -12,6 +12,7 @@ router.register('articles', ArticleViewSet, basename='articles')
 urlpatterns = [
     path('', include(router.urls)),
     path('article-create/', ArticleListCreateApiView.as_view()),
+    path('authors/<int:pk>/', ArticleAuthorRelation.as_view(), name='authors-detail'),
 ]
 
 # urlpatterns = [

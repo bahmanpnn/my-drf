@@ -12,7 +12,8 @@ class ArticleAuthorSerializer(serializers.ModelSerializer):
 
 
 class ArticleSerializer(serializers.ModelSerializer):
-    author = ArticleAuthorSerializer()
+    author = serializers.HyperlinkedIdentityField(view_name='api:authors-detail')
+    # author = ArticleAuthorSerializer()
 
     class Meta:
         model = Article
