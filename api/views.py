@@ -13,30 +13,12 @@ from .permissions import IsStaffOrReadOnly, IsAuthor, IsSuperUserOrStaffReadOnly
 
 # from rest_framework.authentication import BasicAuthentication
 
-
-# class ArticleListApiView(ListAPIView):
-#     queryset = Article.objects.all()
-#     serializer_class = ArticleSerializer
-#
-#
-# # we can set every method to some class and set some url->url/1/delete =>articleDetailView(destroy)
-# class ArticleDetailView(RetrieveUpdateDestroyAPIView):
-#     queryset = Article.objects.all()
-#     serializer_class = ArticleSerializer
-#     permission_classes = (IsStaffOrReadOnly, IsAuthor)
-#     lookup_field = 'pk'
-
-
-# with this model_view_set we can set 2views(article_list+article_detail_list) to 1 view set that handle them
-# we must set permissions for (retrieve and update and destroy) for article and others need to set default permissions
-# that we set in settings file
 class ArticleViewSet(ModelViewSet):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
     filterset_fields = ['is_active', 'author__username', 'author__first_name', 'author__last_name']
     search_fields = ['title', 'content', 'author__username', 'author__first_name', 'author__last_name']
     ordering_fields = ['publish_date', 'is_active']
-
     ordering = ['-publish_date']
 
     # diffrence of ordering and ordering_fields is user can choose fields that want to order by that,
@@ -56,29 +38,53 @@ class ArticleViewSet(ModelViewSet):
             # permission_classes = [IsStaffOrReadOnly]
         return [permission() for permission in permission_classes]
 
-    # def get_queryset(self):
-    #     queryset = Article.objects.all()
-    #
-    #     is_active = self.request.query_params.get('is_active')
-    #     if is_active is not None:
-    #         queryset = queryset.filter(is_active=is_active)
-    #
-    #     author = self.request.query_params.get('author')
-    #     if author is not None:
-    #         queryset = queryset.filter(author__username=author)  # author_name
-    #         # queryset = queryset.filter(author=author)  #author_id
-    #
-    #     return queryset
 
+class ArticleListCreateApiView(ListCreateAPIView):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+
+
+class UserViewSet(ModelViewSet):
+    queryset = get_user_model().objects.all()
+    serializer_class = UserSerializer
+    # permission_classes = (IsSuperUserOrStaffReadOnly,)
+
+# class ArticleListApiView(ListAPIView):
+#     queryset = Article.objects.all()
+#     serializer_class = ArticleSerializer
+#
+#
+# # we can set every method to some class and set some url->url/1/delete =>articleDetailView(destroy)
+# class ArticleDetailView(RetrieveUpdateDestroyAPIView):
+#     queryset = Article.objects.all()
+#     serializer_class = ArticleSerializer
+#     permission_classes = (IsStaffOrReadOnly, IsAuthor)
+#     lookup_field = 'pk'
+
+
+# with this model_view_set we can set 2views(article_list+article_detail_list) to 1 view set that handle them
+# we must set permissions for (retrieve and update and destroy) for article and others need to set default permissions
+# that we set in settings file
+
+
+# def get_queryset(self):
+#     queryset = Article.objects.all()
+#
+#     is_active = self.request.query_params.get('is_active')
+#     if is_active is not None:
+#         queryset = queryset.filter(is_active=is_active)
+#
+#     author = self.request.query_params.get('author')
+#     if author is not None:
+#         queryset = queryset.filter(author__username=author)  # author_name
+#         # queryset = queryset.filter(author=author)  #author_id
+#
+#     return queryset
 
 # class ArticleAuthorRelation(RetrieveAPIView):
 #     queryset = get_user_model().objects.all()
 #     # queryset = get_user_model().objects.filter(is_staff=True)
 #     serializer_class = ArticleAuthorSerializer
-
-class ArticleListCreateApiView(ListCreateAPIView):
-    queryset = Article.objects.all()
-    serializer_class = ArticleSerializer
 
 
 # user
@@ -101,13 +107,6 @@ class ArticleListCreateApiView(ListCreateAPIView):
 #     permission_classes = (IsSuperUserOrStaffReadOnly,)
 #     # permission_classes = [IsAdminUser]
 
-
-class UserViewSet(ModelViewSet):
-    queryset = get_user_model().objects.all()
-    serializer_class = UserSerializer
-    # permission_classes = (IsSuperUserOrStaffReadOnly,)
-
-#
 
 # class RevokeToken(APIView):
 #     permission_classes = (IsAuthenticated,)

@@ -5,17 +5,6 @@ from drf_dynamic_fields import DynamicFieldsMixin
 from blog.models import Article
 
 
-# class ArticleAuthorSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = get_user_model()
-#         fields = ['id', 'username', 'first_name', 'last_name']
-
-# class AuthorUserNameField(serializers.RelatedField):
-#     def to_representation(self, value):
-#         return value.username
-#         # return value.first_name+' '+value.last_name
-
-
 class ArticleSerializer(DynamicFieldsMixin, serializers.ModelSerializer):
     def get_article_author(self, obj):
         return {
@@ -52,3 +41,13 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = '__all__'
+
+# class ArticleAuthorSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = get_user_model()
+#         fields = ['id', 'username', 'first_name', 'last_name']
+
+# class AuthorUserNameField(serializers.RelatedField):
+#     def to_representation(self, value):
+#         return value.username
+#         # return value.first_name+' '+value.last_name

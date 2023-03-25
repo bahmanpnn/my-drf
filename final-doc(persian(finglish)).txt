@@ -1,0 +1,990 @@
+#noktes
+
+# #if template name equal to class name with (_) it doesn't need to set template name => ArticleList =>article_list.html
+
+----------------------------------------------------------------------------
+
+#1-2 basic and initial config
+
+#base proje ro ba django doros mikonim o git o github o set mikonim
+#url e rest(auth/) o config e khode restframework dar setting
+#badesh yek app blog doros mikonim va model ro doros mikonim va vase example dota article add mikonim
+
+----------------------------------------------------------------------------
+
+#3 drf and serializer comperhend
+#avalesh nahve kare django o mvt ro tozih mide va inke bejaye template read kard o send response be client bejash serializer miad vasat
+#badesh doc e drf ro check mikonim ghesmate serializer toturial o ghesmate guide-serializer ro
+#badesh yek app e jadid be esme api doros mikonim -->
+#ebteda serializer ro minevisim badesh view e api ro set mikonim o url esh ro
+
+#in jalase in dota ro chek mikonim(baraye ashnayi e bishtar be doc ghesmate genericview ha negah bendaz mese genericview haye mamooli e django hast ke vase class ha estefade mikonim mese ListView o DetailView ina vali ba in tafavot ke in baraye api hast) -->
+
+#ListAPIView
+in faghat baraye list kardane query e morede nazare ke mikhaym return konimesh
+---
+#ListCreateAPIView
+in yeki dar kenare list kardane query haye morede nazar va ejaze namayash tebghe serializer e set shode mitooonim create ham bokonim 
+
+---- **
+faghat yadet bashe ke api ee ke doros mikonim be soorate default formatesh api hast vali json ina ham vase web send mikone age az apex ina bekhad web estefade kone vase estefade kardane data az api
+
+--------------------------------------------------------------------------------------------
+
+#4 more generic views(detailview / userlist o userdetailview-retrieveapiview/destroyview ina ham vase api)
+
+#ebteda detailview ro doros mikonim baraye namayeshe detail e article
+
+class ArticleDetail(DetailView):
+    # arg=url/1,bahman,...
+    # kwarg=url/pk=1,author=bahman,.....
+    context_object_name = 'article'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Article.objects.filter(is_active=True),
+                                 pk=self.kwargs.get('pk')
+                                 )
+----
+#url
+path('<int:pk>', ArticleDetail.as_view(), name='article_detail'),
+----
+badesh ham template ro set mikonim
+
+--------------detail api
+#ebteda view e morede nazar ro doro mikonim(albate yadet bashe age serializer ro mikhad aval oono bayad doros konim vali khob dobare chon be article marboot mishe niaz nist be doros kardane serializer->
+#hala bastegi dare ke che moredi baraye oon detail bekhaym estefade konim->retrieve->read(get)/destroy(delete)/update
+#albate badan darbare permission ha sohbat mishe ta ejaze nadim har kasi in karharo bokone!
+
+class ArticleDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+#bade view doros kardan url ro midi va done
+    path('<int:pk>', ArticleDetailView.as_view(), name='Article-detail-view'),
+
+
+-------User
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = '__all__'
+----
+# user veiws
+class UserListApiView(ListCreateAPIView:
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class UserDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+----urls
+    path('users/', ArticleListApiView.as_view(), name='users-list-api-view'),
+    path('users/<int:pk>', ArticleDetailView.as_view(), name='user-detail-view'),
+----------
+#nokte **
+
+inja ke user haro neshoon midim dar ghesmate password taraf mitoone copy kone va bade inke yek acc doros karde bood pass e yeki dg ro paste kone va update kone acc e khodesh va oon user ro vase hamin dar sha-256 bayad az hash-salt estefade konim ta data haye makhsoose user ro dar sha-256 e pass add kone ta baghie natoonan az pass esh estefade konan!
+
+----------------slug
+age bekhaym bejaye pk az slug estefade konim dar khode django faghat url o oon query ke pk hastand ro be slug taghir midim->
+path('<slug:slug>', ArticleDetail.as_view(), name='article_detail'),
+--
+class ArticleDetail(DetailView):
+    # arg=url/1,bahman,...
+    # kwarg=url/pk=1,author=bahman,.....
+    context_object_name = 'article'
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Article.objects.filter(is_active=True),
+                                 slug=self.kwargs.get('slug')
+                                 )
+
+----api
+dar api bade url bayad dar detaileview e api, lookup_field set konim->
+    path('<slug:slug>', ArticleDetailView.as_view(), name='Article-detail-view'),
+	lookup_field = 'slug' ->age khali bezarim default pk ro migire vagarne bar asase kwarg ee ke dar url send mishe detail set mishe
+
+---tamrin ha
+#url/1/delete-update-get
+#namayeshe khode user ha mese article ha ke faghat drf o api esh ro neveshtim dar khode django ham piade sazi konim
+
+--------------------------------------------------------------------------------------------------------------------------
+
+#5 access to views and set permissions #api guide=>permission
+#darbare permission policy abraye kolle proje sohbat mikonim ke set mikonim kolle proje chetor bashe access ha masalan mitoonim set konim ke age login nabood faghat read kone user baraye in kar bayad dar setting ino add konim ==>
+#default allow any hast permission=allow any-IsAuthenticated-IsAuthenticatedOrReadOnly-IsAdminUser-....
+#jalase haye bad permission haye custom ro yad migirim mese IsAuthor ke age nevisande oon article bood ejaze edit bede behesh(object level permission ha) *
+
+#yadet bashe ina rooye api tasir mizare na khode view haye django mese article dar template ha!!  ****
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    ]
+}
+
+-----
+#badesh darbaye object level permission tozih dade mishe ke permission dar sathe faghat yek view benevisim ya az third party packages mitonim estefade konim.
+#yeki az mored haye object level permission ha estefade az third party package (guardian) hast.
+-
+#badesh darbare hamoon object level permissio mesal mizane va perview permission set mikonim.mikhaym api haye users o detail user ro faghat IsAdmin ya IsSuperuser(ke chon custom bayad doros beshe in jalase kar nemikonim) faghat access dashte bashe be data hash o api esh ==>
+#be view e app e api mirim:
+
+# users
+class UserListApiView(ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
+    # permission_classes = (IsAdminUser,)
+
+
+class UserDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAdminUser]
+    # permission_classes = (IsAdminUser,)
+
+---------------------------------------------------------------------------------------------------------------------------
+
+#6 custom permissions
+#baraye custom permission ha bayad az basepermission ersbari konim dar class hamoon va 2ta method e mohemme dare ke yeki has_permission va oon yeki has_object_permission hast
+
+---1
+#avalin permission o class e ke mikhaym dar in jalase doros konim IsSuper(or IsSuperReadOnly)hast ke daghighan mesle IsAdmin hast.baraye in kar aval ye file be esme permissions doros mikonim badesh dakhelesh avalin perm.. ro doros mikonim ==>
+
+-permission file in api app
+class IsSuperUser(BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_superuser)
+--view
+class UserDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsSuperUser, IsAdminUser)
+
+---2
+#mikhaym ye permission doros konim vase(tolid konande haye mohtava masalan) staff e sherkat hastand(chon var dg ee add nakardim be user az request.user.is_staff komak migirim)
+
+#az in permission mitoonim baraye list e article ha estefade konim ke dar api e oon ya mishe list ro did ya yeki add kard.age is_staff nabood oon user faghat bebine vali khob in permission ro bejaye(chon ba ham moshkeli nadaran mitoonim ba ham add konim) isAuthenticatedOrReadOnly set mikonim dar settings ta baraye hame view ha ok beshe ta bejoz safe method ha ro faghat staff haye sherkat taghir bedan.khode permission ham intorie ke age method safe nabood faghat is_staff ha ejaze dashte bashan  ==>
+
+-setting
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'api.permissions.IsStaffOrReadOnly',
+    ]
+}
+
+-api app-permission file
+class IsStaffOrReadOnly(BasePermission):
+    """
+    Allows access only to staff users.
+    """
+
+    def has_permission(self, request, view): --> in yani faghat method haye safe ro neshoon mide hatta age staff ham nabashe
+        return bool(
+            request.method in SAFE_METHODS or 
+            request.user and
+            request.user.is_staff
+        )
+
+-api app-view
+class ArticleDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+    permission_classes = (IsStaffOrReadOnly, IsAuthor)
+    lookup_field = 'pk'
+
+--3
+#in permission ham vase oon article ee mikhaym estefade konim ke permission esh intori bashe ke age super user ya author e oon article nabood faghat safe method haro betoone anjam bede
+
+class IsAuthor(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(
+            request.user.is_superuser or
+            obj.author == request.user
+        )
+
+--api app-view
+class ArticleDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+    permission_classes = (IsStaffOrReadOnly, IsAuthor)
+    lookup_field = 'pk'
+
+--4 **
+#in permission vase ine ke user age staff hast list user haro faghat bebine(ya yek permission benevisim ke faghat yek seri data haro bebine az user ha) age super bood taghir ham betoone bede(va hame chizo) bebine ==>
+
+-permission file
+#yadet bashe ke has_permission doros mikonim va be detailview e user ha ham midim hamoon action ro anjam mide yejoorayi bejaye dota permission doros kardan yeki doros kardim ke dota view ro handle mikone ***
+
+class IsSuperUserOrStaffReadOnly(BasePermission): -->in yani age authenticat o staff bood safe method haro neshoon bede/vase super user hame access haro bede
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS and \
+                request.user.is_authenticated and \
+                request.user.is_staff:
+            return True
+        return bool(
+            request.user.is_superuser
+        )
+
+-- api app view
+class UserListApiView(ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsSuperUserOrStaffReadOnly]
+    # permission_classes = (IsSuperUserOrStaffReadOnly,)
+
+
+class UserDetailView(RetrieveUpdateDestroyAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsSuperUserOrStaffReadOnly,)
+    # permission_classes = [IsAdminUser]
+--
+#yadet bashe pas age user haye khasi ro khasti bar asase yek var(is_staff o ..)access bedi az request.method in safe method estefade koni baraye faghat didan
+#age khasti hame acess haro be oon user ha bedi faghat too shart ya bool az oon var estefade kon mese if request.user.is_staff
+
+---------------------------------------------------------------------------------------------------------------------------
+#7 ashnayi ba tool haye ersal e req vase api
+#rester o rest client extension hastand
+#curl ham yek package hast ke mitoonim install konim badesh ->pip install pycurl ==> curl -X method(get,....) url(127.....:8000 ya google.com)
+
+#vase terminal bejoz curl httpie ham hast ->pip install httpie
+
+#yadet bashe baraye connect kardane api be frontend az axios o fetch estefade mishe badan search bezan ***
+
+---------------------------------------------------------------------------------------------------------------------------
+#8 auth in drf and basic auth
+#baraye api view hayi ke doros mikonim va permission vase user haye mahdoodi doros mikonim vase inke test konim bebinim kar mikone va ok hast va user ro login konim basic tarin auth ro mitoonim estefade konim ke basicauth hast baraye inkar kaafie dar setting ghesmate restframework set konimesh badesh ke api e morede nazar ro dar yek rest client bezanim mitoonim login konim==>
+
+--setting
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'api.permissions.IsStaffOrReadOnly',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.BasicAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
+        #     'knox',
+        #     'token auth',
+        #     'jwt',
+        #     'oauth',
+    ]
+}
+---errors
+#2ta error e mohem hast dar inja ke 403 vase kasi hast ke ba vojoode login baz ham be oon url access(permission) nadare.
+#dovomin error http 401 hast ke login e ma moshkel dare mese pass ya user e eshtebah!
+---
+#yadet bashe ke basic auth vase mohite test hast ta vase har view dasti authorize konim badesh age ok boood auth haye dg ro set konim dar mohite asli.hamchenin moshkele basic ine vase login hardafe ke estefade mikonim bayad user pass bedim va shayad ino nakhaym va token e time dar bekhaym set konim(masalan bade 1 rooz dobare auth beshe)
+
+------future
+#hamchenin vase har view ham mese permission ke ham mitoonestim koli set konim ham joda joda vase har view auth ham mitoonim set konim=>
+
+class UserListApiView(ListCreateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsSuperUserOrStaffReadOnly]
+    # permission_classes = (IsSuperUserOrStaffReadOnly,)
+    # authentication_classes = (BasicAuthentication,)
+
+----------------------------------------------------------------------------------------------------------------------------
+
+#9 session auth
+#az session auth vase porject hayi single page mese oonayi ke ba vuejs ya angular up shodan estefade mishe chon endpoint yaki doros mishe ba session auth va nemitoonim az oon session dar baghie app hamoon estefade konim mese mobile o desktop ina.
+#hamchenin age app e ma single page nabashe vali request ha hame ba ajax piade saazi beshe oon moghe ham mitoonim az session esetfade konim==>1-single page 2-ajax
+---
+#yadet bashe ke age basicauth ro active koni vali session ro nakoni shayad be moshkel bekhori chon dg bade login user ha session id doros nemishe va by default ghable ine auth ee add beshe dar setting sessionid ro bade login dar cookie ha add mikone ***
+
+#age sessionid ro add nakoni va basic auth bashe faghat bade login chon dg sessionid nist nemishe logout kard!vase hamin momkene be moshkel bekhorim va gozine logout kar nemikone! **
+
+----method haye yek endpoint o url api
+#get ke oke dg niaz be chizi nist faghat dar rest client method get mizani age access dashti neshoon mdie
+
+--post
+#age method post ro dashte bashe view va endpoint e ma bayad dar kenare ersale data masalan be soorate json 2ta value dar header e ma ersal beshe=>1-content-type /2-X-CSRFToken badesh method ro mizarim roo post age ok bood csrf e ma va match bood ba user ersal mishe
+
+---put
+#put ham mese post bayad dota value e morede nazar dar head gharar begire badesh data ha dar json ro ersal konim
+---delete
+#baraye in faghat url ro ba method e delete ersal mikonim age access dashte bashim http 204 return mishe va faghat lazeme value e crsf ersal beshe dar head e data va niaz be data e json ee nist
+
+----------------------------------------------------------------------------------------------------------------------------
+
+#10 authtoken
+#hamoontor ke jalase ghabl ham yad gereftim age faghat bekhaym noskhe web dashte bashim(hamchenin single page ha / ajax) ba session karemoon rah miofte vali age bekhaym chandta noskhe estefaade konim bayad token dashte bashim ke chanta lib ham mitoonim vase inkar estefade konim mese jwt o tokenauth o ....
+
+#braye estefade az token auth aval too installed app ha addd mikonim mese restframework=>'rest_framework.authtoken',
+
+#badesh dar restframework e setting default authenticaion ro roo tokenauthentication set mikonim;badesh bayad migrate konim
+
+#hala har user yek token e makhsoos be khod darad ke ya az panel e admin mitoone bebine ya dar terminal dastoor e ==>
+#python manage.py drf_create_token username ->age bashe neshoon mide age nabashe misaze
+
+---
+#hala mikhaym ye view(endpoint) dashte bashim ke user behesh request e post bezane vasash token ro ersal konim.baraye inkar bayad obtain_auth_token ro import konim va hamchenin yek url besazim ke view e oon obtain_auth_token bashe ta kar kone==>
+    path('rest-api/api-token-auth/', obtain_auth_token),
+
+#    path('api-auth/', include('rest_framework.urls')) ===> baraye login e session dar api hast vaghti ebtedaye proje rest ro set kardim dar installed app inam dar url gozashtim jalase 3
+--
+badesh be rest client mirim va url e morede nazar ro ba method e post be hamrahe username o password bes oorate gheyre hash shode bayad send konim dar body be hamrahe content-type dar header ke json bayad bashe ta token ro get konim->
+{
+    "username": [
+        "user2is2admin"
+    ],
+    "password": [
+        "ho3eiN1999!@"
+    ]
+}
+
+---
+#hala bayad befahmim ke chetor access dashte bashim be yek view bar asase permission haye tarif shode mese view e users list.baraye in kar bayad dar header data e authorization token e oon user ro send konim baraye har endpoint o url mese users list=>
+Authorization=Token (usertoken)=>Token 8e612c5ff7c78953a134131b3e40799a0aeccfc6
+---
+baraye post va create e masalan article dar kenare ersale token dar header bayad content type ham ersal beshe ke masalan inja form hast pas bayad value oon application/x-www.... bashe 
+#marhale badesh bayad dar body chizhayi ke vase saakhte article niaaze ro vared konim (albate dar in mesal dar halate form na json) va title o slug ina ro midim value ham midim o send mikonim dar method e post.
+-
+baraye put ham hamin chiz ha va value haro taghir midim age access dashte bashe oon user ke token esh dare ersal mishe edit mishe article.
+-
+delete ham faghat dar header data e authorize ba token ersal mishe dar method e delete va endpoint o url e morede nazar badesh response 204 dade mishe.
+
+----------------------------------------------------------------------------------------------------------------------------
+
+#11 revoke token and work with APIView for creating custom class
+#baraye inke user logout beshe dar front ya token ro dar local storage save mikonan ya cookie ha ke badesh delete mikonan.vali dar database age bekhay logout konim user ro bayad token ro revoke konimesh vase in kar bayad yek class e jadidi be komak e library e APIView benevisim ta token ro delete konim vaghti ke class(endpoint o url) get shod ==>
+
+#api app views
+class RevokeToken(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        return Response({"method": "get"})
+
+    def post(self, request):
+        return Response({"method": "post"})
+
+    def put(self, request):
+        return Response({"method": "put"})
+
+    def delete(self, request):
+        return Response({"method": "delete"})
+
+--project urls
+    path('rest-api/revoke/', RevokeToken.as_view(), name='revoke-token'),
+
+-------
+#hala mikhaym method e delete ro faghat negah darim va bade call shodane oon method user logout beshe va token revoke beshe==>
+class RevokeToken(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def delete(self, request):
+        request.auth.delete()
+        return Response({"msg": "delete"})
+
+---
+#hala mikhaym status ro bejaye 200 204 taghir bedim ke no content hast.baraye in kar dar response var e status ro set mikonim =>status=204
+        return Response({"msg": "delete"},status=204)
+
+----------------------------------------------------------------------------------------------------------------------------
+
+#12 adding important rest endpoints for authorizing(register,logout,reset password,email,...)
+#in jalase mikhaym az dj-rest-auth ke yek thirdparty package hast estefaade konim vase hamin api haye ghabli be kar nemiad(revoke,api-token-auth) vase hamin comment mikonim.
+
+#aval install mikonim dj_rest_auth ro badesh 'dj_rest_auth' dar install app ha gharar midim.
+
+badesh url esh ro set mikonim ==>
+path('rest-api/rest-auth/', include('dj_rest_auth.urls')),
+----
+#in kar ha baraye esteafde az in package zaroori bood vali karhaye badi optional hast va age lazem boood dar project mitoonim estefade konim
+#bakhshe optionale aval registration hast ke age bekhaym vase register e site khodemooon az in package estefade konim bayad ==>
+
+# pip install django-allauth
+
+--setting
+#installed apps
+    # dj_rest_auth third party package
+    'dj_rest_auth',
+    # optionals for dj_rest_auth third party package
+    'django.contrib.sites',  # this is for handling many domains in one app
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'dj_rest_auth.registration',
+--
+#SITE_ID=1
+--------
+    # registration(optional)
+    path('rest-api/dj-rest-auth/registration/', include('dj_rest_auth.registration.urls'))
+-------
+#bakhshe dovome in package social authentication hast ke be komake social media ha ke login kardim bedoone registration o in chiza varede site e ma beshan.
+#installed apps
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.twitter',
+
+--example1
+----view
+class FacebookLogin(SocialLoginView):
+    adapter_class = FacebookOAuth2Adapter
+
+--url
+urlpatterns += [
+    ...,
+    path('dj-rest-auth/facebook/', FacebookLogin.as_view(), name='fb_login')
+]
+
+-- example2
+class TwitterLogin(SocialLoginView):
+    serializer_class = TwitterLoginSerializer
+    adapter_class = TwitterOAuthAdapter
+
+
+urlpatterns += [
+    ...,
+    path('dj-rest-auth/twitter/', TwitterLogin.as_view(), name='twitter_login')
+]
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+#13 endpoints test for auth ***
+login-logout-user-password/change-registration-password/reset-password/reset/confirm/<uidb64>/<token>/-
+
+#hame endpoint haye django-allauth ke jalase ghabl set kardim ro test mikonim in jalase ta ashna beshim.bishtareshoon ok o easy hastand mohem haro ke tozih lazem dare inja tozzih midam==>
+
+---
+#local/rest-api/dj-rest-auth/user/
+#in endpoint vaghti ke be template ina access nadashte bashi masalan serveri chizi ba in endpoint be data haye user dastrasi peyda mikoni
+
+---registration
+#local/rest-api/dj-rest-auth/registration/
+#baraye registration age form bedoone email ersal beshe moshkeli pish nemiad vali bihstare moghe ha ma mikhaym ye code ee be email e oon user ersal konim ta active beshe gmail esh ina.vase hamin be soorate auto django-allauth in karo mikone va be soorate default age bezani error migirim chon EMAIL_BACKEND set nashode va bayad set konim baraye ersale email o templatesh ina be oon user==>
+
+--setting
+# set console email backend that you can see email that send to user in console
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+----templatename ****
+#hala ke form ersal mishe va link be user dade mishe hanooz moshkele template darim chon dar khode package(url e account-confirm-email) vase view e ke az class e templateView hast template set nashode(TemaplteView.as_view(template_name="account_confirm.html")) va khodemoon mitoonim override konim in url ro ya template set konim vasash.
+
+##ba inke override kardam o template set kardam bazam error mide ****
+
+    path(
+        'rest-api/account-email-verification-sent/', TemplateView.as_view(template_name="email_verify.html"),
+        name='account_email_verification_sent',
+    ),
+
+----------reset password confirm
+#baraye in url o endpoint yek moshkeli ke dare dar template url e password_reset_confirm set shode vali name e khode path o url e view reset password dar package rest_password_reset_confirm set shode va ba override kardanesh doros mish pas dar url haye aslie proje import mikonim oon view ro badesh set mikonim.vali yek moshkele dg ee ham ke dare 2ta arg ro ham set nakardan vase url ke view migire va bayad ma khodemoon url e override shode ro set konim==>
+
+    path('rest-api/password/reset/confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(),
+         name='password_reset_confirm'),
+
+#hala vase test aval password reset mikonim badesh oon email ee ke masalan be email e user send mishe ro dar console mibinim.badesh oon link ro copy mikonim va dar rest client paste mikonim.badesh mige ke behem new password o confimr passwrod ro bede ba uid o token ke 2taye dovom az url gerefte mmishe be view midim va 2taye aval dar form vared mishe.
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+#14 theory of jwt
+#dar auth haye ghabli ke token dashtan(be khosoos allauth) baraye user faghat yek key tolid mishe vali dar jwt 2 model key darim(access key/refresh key)
+#access token bade yek time kootahi expired mishe ke mesle hamoon token dar auth token ina dar db save mishe vali refresh token bade login ina time toolani hata ta 1 sal ham dare ke  vaghti expired mishe access token be komake oon login konim!
+
+# access token 3 part dare=>header-payload-signiture
+#header data haye saade mesle noe token ina ro dar khodesh dare
+#payload data haye user ina ro mesle admin boodan o exipired date e token ina dare (bishtar ham data mitoonim khodemoon bezarim)
+
+#signiture ham intorie ke header o payload ba secret key(fek konam kollan yeki hast in key vase site) be soorate base64 code mishe va ba signiture moghayese mishe dar django age ok bood o user edit nakarde bood login mikone ke in kar estelahan self authorizing migan
+
+#baraye har device yek token doros mikone jwt bar axe auth token ina
+#revoke time dare bar axe baghie
+
+#dar auth token ina baraye revoke khode token ro delete mikonim ==>auth.delete()
+#vali dar jwt bayad oon token ro dar blocklist bezarim
+
+#raveshe dg ee baraye revoke kardane token dar jwt estefade az redis hast.intori ke vase login bade authorizing e signiture chek kone dar redis hast oon key ya na.age bekhad logout kone user az redis ham delete(revoke) mikonim token ro va injoori dg token ejaze voorod nemigire.
+
+#auth token be komake user password faghat login mikonim vali dar jwt ham az in ravesh mishe ham refresh token age valid bashe o set konim. 
+-----------------------------------------------------------------------------------------------------------------------------------
+# jalase 14 eslahie
+
+#kolle jalase be soorate kholase in mishe ke oon token e jwt ke estefade mishe(bearer) ke az 3 bakhsh e header o payload o signiture tashkil shode bood==>
+header->base64 + (payload->base64+secretkey) ==>hash
+
+#pas hash mishe va ba signiture moghayese mishe age doros bood login ina taaeed mishe.
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+#15 config simple jwt 
+#pip install djangorestframework-simplejwt
+
+----add config to default_auth_calsses setting
+REST_FRAMEWORK = {
+    ...
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        ...
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+    ...
+}
+---- add urls
+from rest_framework_simplejwt import views as jwt_views
+
+    path('api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'),
+
+--
+#badesh chiz hayi ke lazem nadarim darbare auth e marboot be jalase haye ghabli(jalase 11 be bad) ro ya pak mikonim ya comment mese allauth ina ke jalase haye badi ba jwt tarkib mikonim vali in jalase comment mikonim ke badan estefade konim-->
+
+--setting
+    # dj_rest_auth is third party package
+     'dj_rest_auth',
+     'dj_rest_auth.registration',
+     'allauth',
+     'allauth.account',
+     'allauth.socialaccount',
+--urls
+    # # dj-rest-auth third party package
+    # path('rest-api/dj-rest-auth/', include('dj_rest_auth.urls')),
+    # # optional registration
+    # path('rest-api/dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
+
+    # # this is not in course So I added it for having better experience to log in and logout in rest templates
+    # path('rest-api/rest-framework/', include('rest_framework.urls')),
+
+    # # they are 2 path of django-allauth urls that we must override them to use and don't have error
+    # path('rest-api/password/reset/confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(),
+    #      name='password_reset_confirm'),
+
+----***
+hala ba endpoint hayi ke dar url e asli set kardim test mikonim bebinim access key o refresh key mide behemoon(hamintor access key be komake refresh key)
+#baraye khode tooken ke user pass ro bedim behemoon hardo token e access o refresh ro return mikone dar json
+#vali age be path e token/refresh berim va ba form dar rest client value e refresh ro ba khode token e refresh befrestim behemoon accecc token ro mide
+#hala in vase vaghthayi ke set kardim masalan 5 min va access expired mishe bayad be server request bezanim va refresh token ro bedim va age ok bood(masalan dar redis hazf nashode bashe va logout ham nakarde bashe user o token ok bashe) behemoon access key ro return kone ta user ro hamchenan ke dare beyne url ha va page ha migarde login negah darim va yeho request e badi ke expired shode bood token e access user nafahme ke logout shode!!
+
+------users path
+baraye masalan request zadan be endpoint e /users/ ke list e user haro neshoon mide va faghat set shode ke is_admin ha masalan bebinan o permission dashte bashan bayad dar body user pass ro bedim va dar header ham value e Authorization==>bearer (accecc token) ro post konim.
+#age token expired beshe ya eshtebahi dashte bashe dar khodesh unvalid mishe va errror 401 mide
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+#16 dj-rest-auth
+#aval bejaye JwtAuthentication ke jalase ghabl add kardim hala JwtCookieAuthentication ro add mikonim ta access o refresh ina be komake coockie dar header send beshan albate http only hastand dar in model.hamchenin in JWTCookieAuthentication az khode JWTauthentication ers bari mikone age dar lib ha check koni mibini ke abstract shode vase in.harchizi ke jalase ghabl comment kardim ro hodoodan dobare bayad bargardoonim ta estefade konim.pas path haye rest-auth ro add mikonim app haye marboot be all-auth ham dobare az comment dar miarim albate bejoz default_authentication_class ke edit mikonim baghie chizhayi ke jalase haye pish add kardim mese mese url haye zir ro comment mikonim ==>
+
+    path('rest-api/token/', jwt_views.TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('rest-api/token/refresh/', jwt_views.TokenRefreshView.as_view(), name='token_refresh'), 
+
+#in jalase add mikonim==>
+--urls
+    # this is not in course So I added it for having better experience to log in and logout in rest templates
+    path('rest-api/rest-framework/', include('rest_framework.urls')),
+
+    # dj-rest-auth third party package
+    path('rest-api/dj-rest-auth/', include('dj_rest_auth.urls')),
+    # optional registration
+    path('rest-api/dj-rest-auth/registration/', include('dj_rest_auth.registration.urls')),
+
+    # they are 2 path of django-allauth urls that we must override them to use and don't have error
+    path('rest-api/password/reset/confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(),
+         name='password_reset_confirm'),
+
+---installed apps
+    # dj_rest_auth is third party package
+    
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+
+---setting
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'dj_rest_auth.jwt_auth.JWTCookieAuthentication',
+
+    ]
+--
+REST_USE_JWT=True
+JWT_AUTH_COOKIE = 'access'
+JWT_AUTH_REFRESH_COOKIE = 'refresh'
+---------
+hala age login koni mibini ke dar cookie ha dota chiz ke inja be esme access o refreshh set kardim mibinim ke httponly oonha True hast ta dar js natoone kasi estefade kone va faghat dar backend estefade mishe.faghat tanha attack mitoone hamchenan ba csrf bashe!
+#albate vase man nemidoonam chera kar nakard va faghat moghe login key return mikone bar axe dore ke id o in chiza ham dar kenare access o refreshh return mishe!!!
+
+#nemidoonam chera kar nakard in library!!fek konam bayad az simple_jwt estefade konam bejaye gheyre mostaghim estefade kardan az dj_res_auth!!
+#inam deghat kon ke minevise method not allowd!!! az chie????
+--->Method Not Allowed: /rest-api/dj-rest-auth/registration/
+--->Method Not Allowed: /rest-api/dj-rest-auth/login/
+
+
+---darbare .../token/verify o ..../token/refresh
+#dar inja ma dota endpoint e refresh o verify darim.access ro midim be verify age valid bood be karemoon edame midim masalan access midim ta be page o url e morede nazar bede.
+#age 401 bood refresh tokenesh ro midim be endpoint e refresh age 200 bood ke access token ro migirim baz va be kar edame midim o midim be endpoint e verify age na expired shode va redirect mikonim user ro be url e login e site.
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+#17 about viewsets
+#viewset ha baraye tarkib va yeki kardane chand view be yek view be kar miran masalan baryae yek endpoint hame method haro joda kardi(read,put,create,update) va hala baraye modiriate hame az view set estefade mikonim.
+
+#mese hame jahaye django inja ham viewset e mamooli darim va modelviewset darim.
+#dar mamooli hame method haro joda bayad set konim mese View ee ke dar khode django estefade mikonim va get o post ro set mikonim.inja 6 ta method dare ke bayad set konim.
+#vali kare ma ba modelviewset ha kheyli rahat tar mishe.taze age khastim query set haro custom konim bazam mitoonim shart bezarim age action o method==list ya update_list o in chiza felan karo kone va return kone
+
+-----------------------------------------------------------------------------------------------------------------------------------
+
+#18 first viewset coding
+#avalin viewset ee ke mitoonim doros konim baraye view haye api hamoon vase articlelist o detailesh hast ke dota view ro yeki mikonim.albate man dar proje am bejaye 2ta view 2ta doros kardam.pas bejaye 3ta view yeki doros mikonim.hala bayad chek konim query ha va serializer class ha cheotre va set konim.dar in jalase darbarash sohbat nemishe faghat ghesmate permission_classes fargh mikone pas bayad set konim ke vaghti khast article list o create list esh ejra beshe che permission hayi dashte bashe vaghti khast detail ejra beshe che permission hayi dashte bashe==>
+
+class ArticleViewSet(ModelViewSet):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#19 set get permission for actions in view set
+
+class ArticleViewSet(ModelViewSet):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+
+    def get_permissions(self):
+        if self.action in ['retrieve', 'update', 'destroy']:
+            permission_classes = [IsStaffOrReadOnly, IsAuthor]
+        else:
+            permission_classes = [IsAuthenticatedOrReadOnly, IsStaffOrReadOnly]
+        return [permission() for permission in permission_classes]
+
+---users
+#chon detail o khode users list permission esh yeki kare ma rahat tare inja
+class UserViewSet(ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsSuperUserOrStaffReadOnly,)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#20 routers
+#viewset hayi ke doros kardim ro hala bayad set konim url hashoon ro.baraye inkar bayad az router ha komak begirim.
+
+router = routers.SimpleRouter()
+router.register('users', UserViewSet)
+router.register('articles', ArticleViewSet)
+
+# urlpatterns = router.urls==> we can use this one or urlpatterns=[] that i used bottom
+
+urlpatterns = [
+    path('', include(router.urls)),
+    path('article-create/', ArticleListCreateApiView.as_view()),
+]
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#21 set get_user_model() instead of User
+#be khosoos vaghti ke user ro abstract mikonim va taghiresh midim o chizi add mikonim nabayad mostaghim import konim vagarne drf be moshkel mikhore.vase hamin az get_user_model() estefade mikonim va harja ke User ro estefade mikardim bayad taghiresh bedim be get_user_model() baraye mesal ==>
+
+class UserViewSet(ModelViewSet):
+    queryset = get_user_model().objects.all()
+    serializer_class = UserSerializer
+    permission_classes = (IsSuperUserOrStaffReadOnly,)
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#22 objects filtering in drf(part1)
+#in model filtering sade tarin raveshe filtering hast vali khooob nis estefade beshe vali bayad yad dashte bashim.
+#baraye estefade az in ravesh bayad mesle khode django az get_queryset method estefade konim va filter konim bar asase chizi ke dar url(kwargs)vojood dare==>
+
+class ArticleViewSet(ModelViewSet):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+
+    def get_permissions(self):
+        if self.action in ['retrieve', 'update', 'destroy']:
+            permission_classes = [IsStaffOrReadOnly, IsAuthor]
+        else:
+            permission_classes = [IsAuthenticatedOrReadOnly, IsStaffOrReadOnly]
+            # permission_classes = [IsStaffOrReadOnly]
+        return [permission() for permission in permission_classes]
+
+    def get_queryset(self):
+        queryset = Article.objects.all()
+
+        is_active = self.request.query_params.get('is_active')
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active)
+
+        author = self.request.query_params.get('author')
+        if author is not None:
+            queryset = queryset.filter(author__username=author)  # author_name
+            # queryset = queryset.filter(author=author)  #author_id
+
+        return queryset
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#23 better way to objects filtering(django-filter)
+#bad az inke django-filter ro install kardim ;dar ghesmate restframework ghesmate backend ha add mikonimesh==>
+
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ]
+--
+#hala baraye estefade be view e morede nazar mirim va bejaye estefade az kwargs o get_queryset az filterset_fields=[] estefade mikonim===>
+
+class ArticleViewSet(ModelViewSet):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+    filterset_fields = ['is_active', 'author__username', 'author__first_name', 'author__last_name']
+
+    # this url is from search about is_active true and username of author is bahman!!
+    # http://127.0.0.1:8000/rest-api/articles/?is_active=True&author__username=bahman
+    #this url is for searching just by username that is mamad
+    # http://127.0.0.1:8000/rest-api/articles/?is_active=true&author__username=mamad&author__first_name=&author__last_name=
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#24 adding search box to drf and making easier to search objects
+hamoontor ke jalase haye pish global ye seri chizha mese permission o backend o in chiza ro dar rest_Framework add kardim hala ham mitoonim bejaye set kardane jodagoone har view vase searchfilter esh oono be soorate global dar restframework set konim==>
+
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter'
+    ]
+--
+#hala har view ee ke khastim az searchfilter estefade konim kaafie ke search_fileds ro set konim==>
+
+class ArticleViewSet(ModelViewSet):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+    filterset_fields = ['is_active', 'author__username', 'author__first_name', 'author__last_name']
+    search_fields = ['title', 'content', 'author__username', 'author__first_name', 'author__last_name']
+    def get_permissions(self):
+	...
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#25 ordering filter
+#ordering filters ham mese search_fields mitoonim global set konim har ja lazemm bood khode ordering_fields=[] ro set konim vase view esh
+#pas ebteda dar rest add mikonim==>
+
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter'
+        'rest_framework.filters.OrderingFilter'
+    ]
+
+#hala bar asase chizhayi ke dar modele ma niaz darim order beshan masalan price o created_date o ina set mikonim==>
+
+class ArticleViewSet(ModelViewSet):
+    queryset = Article.objects.all()
+    serializer_class = ArticleSerializer
+    filterset_fields = ['is_active', 'author__username', 'author__first_name', 'author__last_name']
+    search_fields = ['title', 'content', 'author__username', 'author__first_name', 'author__last_name']
+    ordering_fields = ['publish_date', 'is_active']
+
+    # ordering=['-publish_date']
+    # diffrence of ordering and ordering_fields is user can choose fields that want to order by that,
+    # but ordering is set by default and user can't change that
+
+    def get_permissions(self):
+	...
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#26 more about serializer and json
+#bishtar tozih dade mishe darbare karkarde serializer o json ke chi hastand
+#be tore kolli serializer data haye be dast oomade az query o model ha ro be soorate data e ghabele fahm be zaboone hamegani ke json bashe tabdil mikone va jaygozine template dar charkhe request be app o server e ma hast.
+#json ham chizi mese dictionary hast tanha ba in fargh ke dar dic mitoonim bade item e akhar , bezarim vali dar json na va error mide.
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#27 validation in serializers
+#dar serializer yek seri jaha validation lazem mishe mese check kardane password o repassword ya chek kardane naboodane yek seri chizha dar ye field az serializer e tarif shode
+#hamoontor ke goftam 2 model validation darim.vase password az object level validation estefade mishe mishe.modele 2 esme khasi nadare vali vase esm gozarie khode method esh az validate_field estefade mishe ke aval in model ro test mikonim==>
+
+class ArticleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Article
+        # fields = '__all__'
+        exclude = ['created_date', 'updated']
+
+    def validate_title(self, data):
+        filter_list = ['php', 'js', 'laravel', 'javascript']
+        for i in filter_list:
+            if i in data:
+                raise serializers.ValidationError('you can\'nt use another languages name!')
+        return data
+
+---password validate
+#baraye yadgirie bishtar be package haye restframework o rest_auth mitooni sar bezani va serializer hasho bekhoone oonja pass haro ham behtar neveneshte.
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+
+#28 serializer haye too dar too
+#baraye estefade az serializer haye too dar too masalan bejaye id e author dar article ha ebteda bayad yek serializer doros konim ke yek seri data hayi ke mikhaym neshoon bede bejaye oon id ro set konim dar serializer e jadid.badesh author ro set mikonim dar serializer e asli va done==>
+
+class ArticleAuthorSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ['id', 'username', 'first_name', 'last_name']
+
+
+class ArticleSerializer(serializers.ModelSerializer):
+    author = ArticleAuthorSerializer()
+
+    class Meta:
+        model = Article
+        # fields = '__all__'
+        exclude = ['created_date', 'updated']
+
+    def validate_title(self, data):
+        filter_list = ['php', 'js', 'laravel', 'javascript']
+        for i in filter_list:
+            if i in data:
+                raise serializers.ValidationError('you can\'nt use another languages name!')
+        return data
+
+    def validate_slug(self, title, slug):
+        if title == slug:
+            raise serializers.ValidationError('you can\'nt use same title for slug!!')
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#29 hyperlinking views
+#in jalase ham yejoor ba serializer haye too dar too kar darim faghat bejaye inke yek field ro jaygozin konim ba chizhaye dg ke vasash yek serializer doros mikonim hamoon serializer e dovomi ke doros mikonim ro link mikonim be hamoon field.faghat bejaye hyperlinkserializer ha az serializer relations estefade mikonim.masalan bejaye author e article yek link dide mishe ke ba click roosh be detail page redirect mishim==>
+
+#ebteda baraye serializere dovomi ke mikhaym dar avali estefade konim yek view doros mikonim
+
+class ArticleAuthorRelation(RetrieveAPIView):
+    queryset = get_user_model().objects.all()
+    serializer_class = ArticleAuthorSerializer
+--url
+    path('authors/<int:pk>/', ArticleAuthorRelation.as_view(), name='authors-detail'),
+
+--set kardane link
+#hala field e author ro set mikonim dar serializer e avali(articles) ke lazem bood ta linkesh ro neshoon bede va ba click roosh be detail page e author bere==>
+
+    author = serializers.HyperlinkedIdentityField(view_name='api:authors-detail')
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#30 better ways to set relations to serializers
+#3 ravesh baraye set kardane relation dar serializer ha in jalase barresi mishe ke be tartib az sakht o bad be asoon o khoob has.ina ham mese jalase ghabl baraye set kardane serializer haye too dar too estefade mishe==>
+
+--1 to_representation
+#bejaye url o view o articleAuthorSerializer ke comment mikonim chon lazemeshoon nadarim dg az code zir estefade mikonim
+#in method ee ke dar in ravesh estefade mishe vase username e har value return mikone hala in value az modele article ke author id dare gerefte mishe va bejaye id ,username ro return mikone ==>
+
+class AuthorUserNameField(serializers.RelatedField):
+    def to_representation(self, value):
+        return value.username
+	# return value.first_name+' '+value.last_name
+
+class ArticleSerializer(serializers.ModelSerializer):
+    author = AuthorUserNameField(read_only=True)
+    ...
+    ...
+
+--2 serializer.Charfield()
+#dar in ravesh kaafie vase set kardane relation e serializer ha faghat oon feature ro ba charfield() set konim==>
+class ArticleSerializer(serializers.ModelSerializer):
+    author = serializers.CharField(source="author.username", read_only=True)
+    ....
+    ....
+
+----3 SerializerMethodField
+#dar in ravesh oon feature ro ba yek methode dakheli dar serializer(class e ke neveshtim) set mikonim==>
+
+class ArticleSerializer(serializers.ModelSerializer):
+    def get_article_author(self, obj):
+        return obj.author.username
+
+    author = serializers.SerializerMethodField('get_article_author')
+
+    # author = serializers.CharField(source="author.username", read_only=True)
+    # author = AuthorUserNameField(read_only=True)
+    # author = serializers.HyperlinkedIdentityField(view_name='api:authors-detail')
+    # author = ArticleAuthorSerializer()
+    ...
+    ...
+    ...
+
+#hamchenin khoobie in ravesh ine ke mese avalin raveshi ke baraye serializer haye too dar too ke dar jalase 28 barresi shod(ArticleAuthorSerializer) ke dar oon user ro set mikardim va be soorate dictionary field hayee ke mikhastim ro bejaye author id neshoon bede inja ham dar in raveshe akhar mitoonim hamchin kari konim va yek dictionary return konim ==>
+
+class ArticleSerializer(serializers.ModelSerializer):
+    def get_article_author(self, obj):
+        return {
+            'username':obj.author.username,
+            'first_name':obj.author.first_name,
+            'last_name':obj.author.last_name,
+        }
+
+    author = serializers.SerializerMethodField('get_article_author')
+    ...
+    ...
+    ...
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#31 serializer fields
+#darbare field haye serializer ha sohbat mishe ke kheyli ham tozih nemide faghat esm mibare ke kodoom ha moheme
+#yeki az jaleb tarin field ha base64images hast ke bejaye save kardane khode ax be soorate yek data e base64 save mishe dar database!!
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#32 about third party packages
+#darbare package ha tozihe kootahi kootahi mide va ziad an i har kodoom too yek ghesmati be kar mian
+#yek seri az mohem tarin ha dynamyic serializer ha hastand ke jalase bad ham sohbat mishe harchand mokhtasar in jalase darbare (dynamic rest) sohbat mishe ke karesh in package marboot be url haye dynamic hast
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#33 dynamic fields mixin package
+#kare in package dynamic kardane field haye serializer hast va dar url maloom mishe ke kodoom serializer ro entekhab kone django(view)
+#ba in package mitoonim bejaye set kardane chand serializer yeki benevisim va url haye mokhtalefo dynamic ee doros konim
+#dar in jalase yad migirim ke az article yek url ee dynamic doros konim va harchizi az article ke lazem o doost dashtim ro ba yek serializer va chand url return konim==>
+#ebteda bayad package ro nasb konim==>pip install drf-dynamic-fields
+
+#hala bayad dar oon serializer ee ke mikhaym dynamic konimesh az in package ersbari kone==>
+
+class ArticleSerializer(DynamicFieldsMixin, serializers.ModelSerializer): <========
+    def get_article_author(self, obj):
+        return {
+            'username': obj.author.username,
+            'first_name': obj.author.first_name,
+            'last_name': obj.author.last_name,
+        }
+
+    author = serializers.SerializerMethodField('get_article_author')
+
+    # author = serializers.CharField(source="author.username", read_only=True)
+    # author = AuthorUserNameField(read_only=True)
+    # author = serializers.HyperlinkedIdentityField(view_name='api:authors-detail')
+    # author = ArticleAuthorSerializer()
+
+    class Meta:
+        model = Article
+        # fields = '__all__'
+        exclude = ['created_date', 'updated']
+
+    def validate_title(self, data):
+        filter_list = ['php', 'js', 'laravel', 'javascript']
+        for i in filter_list:
+            if i in data:
+                raise serializers.ValidationError('you can\'nt use another languages name!')
+        return data
+
+    def validate_slug(self, title, slug):
+        if title == slug:
+            raise serializers.ValidationError('you can\'nt use same title for slug!!')
+---estefade
+#hala kafie dar oon url(view) ee ke vasash serializeresh ro set kardim field hayi ke mikhaym ro bedim
+--
+http://127.0.0.1:8000/rest-api/articles/?fields=id,title
+--
+http://127.0.0.1:8000/rest-api/articles/?fields=id,title,content,author
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
