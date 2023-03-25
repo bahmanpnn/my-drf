@@ -5,7 +5,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework.viewsets import ModelViewSet
 from blog.models import Article
-from .serializers import ArticleSerializer, UserSerializer, ArticleAuthorSerializer
+from .serializers import ArticleSerializer, UserSerializer
 from rest_framework.generics import ListCreateAPIView, RetrieveAPIView
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from .permissions import IsStaffOrReadOnly, IsAuthor, IsSuperUserOrStaffReadOnly
@@ -71,6 +71,11 @@ class ArticleViewSet(ModelViewSet):
     #     return queryset
 
 
+# class ArticleAuthorRelation(RetrieveAPIView):
+#     queryset = get_user_model().objects.all()
+#     # queryset = get_user_model().objects.filter(is_staff=True)
+#     serializer_class = ArticleAuthorSerializer
+
 class ArticleListCreateApiView(ListCreateAPIView):
     queryset = Article.objects.all()
     serializer_class = ArticleSerializer
@@ -102,11 +107,7 @@ class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
     # permission_classes = (IsSuperUserOrStaffReadOnly,)
 
-
-class ArticleAuthorRelation(RetrieveAPIView):
-    queryset = get_user_model().objects.all()
-    # queryset = get_user_model().objects.filter(is_staff=True)
-    serializer_class = ArticleAuthorSerializer
+#
 
 # class RevokeToken(APIView):
 #     permission_classes = (IsAuthenticated,)

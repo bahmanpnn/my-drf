@@ -5,14 +5,29 @@ from rest_framework import serializers
 from blog.models import Article
 
 
-class ArticleAuthorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        fields = ['id', 'username', 'first_name', 'last_name']
+# class ArticleAuthorSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = get_user_model()
+#         fields = ['id', 'username', 'first_name', 'last_name']
+
+# class AuthorUserNameField(serializers.RelatedField):
+#     def to_representation(self, value):
+#         return value.username
+#         # return value.first_name+' '+value.last_name
 
 
 class ArticleSerializer(serializers.ModelSerializer):
-    author = serializers.HyperlinkedIdentityField(view_name='api:authors-detail')
+    def get_article_author(self, obj):
+        return {
+            'username':obj.author.username,
+            'first_name':obj.author.first_name,
+            'last_name':obj.author.last_name,
+        }
+
+    author = serializers.SerializerMethodField('get_article_author')
+    # author = serializers.CharField(source="author.username", read_only=True)
+    # author = AuthorUserNameField(read_only=True)
+    # author = serializers.HyperlinkedIdentityField(view_name='api:authors-detail')
     # author = ArticleAuthorSerializer()
 
     class Meta:
